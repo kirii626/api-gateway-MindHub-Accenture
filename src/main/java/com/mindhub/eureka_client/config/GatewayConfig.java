@@ -1,5 +1,6 @@
 package com.mindhub.eureka_client.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -8,15 +9,34 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GatewayConfig {
 
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder routeLocatorBuilder) {
         return routeLocatorBuilder.routes()
-                .route("user-service", r -> r.path("/users/**")
+                .route("auth-service", r -> r.path("/api/auth/**")
                         .uri("lb://user-microservice"))
-                .route("products-service", r-> r.path("/products/**")
+                .route("user-service", r -> r.path("/api/user/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("lb://user-microservice"))
+                .route("admin-service", r -> r.path("/api/admin/**")
+                        .filters( f -> f.filter(jwtAuthenticationFilter))
+                        .uri("lb://user-microservice"))
+                .route("internal-user-service", r -> r.path("/internal/user/**")
+                        .uri("lb://user-microservice"))
+
+                .route("products-user-service", r-> r.path("/api/product/**")
                         .uri("lb://product-microservice"))
-                .route("order-service", r -> r.path("/orders/**")
-                        .filters(f -> f.addRequestHeader("X-Origin", "Gateway"))
+                .route("products-admin-service", r -> r.path("/api/product-admin/**")
+                        .filters( f -> f.filter(jwtAuthenticationFilter))
+                        .uri("lb://product-microservice"))
+
+                .route("order-user-service", r -> r.path("/api/order-user/**")
+                        .filters(f -> f.filter(jwtAuthenticationFilter))
+                        .uri("lb://order-microservice"))
+                .route("order-admin-service", r -> r.path("/api/order-admin/**")
+                        .filters( f -> f.filter(jwtAuthenticationFilter))
                         .uri("lb://order-microservice"))
 
 //               /*
